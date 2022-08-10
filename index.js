@@ -27,12 +27,37 @@ const boardMechanics = {
         this.sound.pause();
       }
   },
+  theRepeater:[],
+  clock: function(stopClock){
+    // function creation
+    let sec = 0;
+    function pad ( val ) { return val > 9 ? val : "0" + val; }
+    
+    let theRepeater; //we will use this variable to clear the setInterval()
+    if(stopClock){
+      
+      clearInterval(boardMechanics.theRepeater);
+    } 
+    else if(!(stopClock)){
+      boardMechanics.theRepeater = setInterval(() => {
+        console.log("second");
+        document.getElementById("seconds").innerHTML=pad(++sec%60);
+        document.getElementById("minutes").innerHTML=pad(parseInt(sec/60,10));
+
+      }, 1000);
+   }
+  },
   randoNumber: function () {
     return Math.floor(Math.random() * this.amountToBeMatched);
   },
   createTheBoard: function () {
+    //localStorage.clear();
+    document.getElementById("bestMin").innerHTML=localStorage.getItem("getMin");
+    document.getElementById("besSec").innerHTML=localStorage.getItem("getSec");
+    
+    this.clock(false);
     //preload lyder
-    this.playWrongSound = new boardMechanics.soundWrong ("wrongCard3.wav");
+    this.playWrongSound = new boardMechanics.soundWrong ("wrongCard.wav");
     this.playCorrectSound = new boardMechanics.soundWrong ("correctCard.wav");
     this.comepleGameSound = new boardMechanics.soundWrong ("completeGame.wav");
     this.flipCardSound = new boardMechanics.soundWrong ("flipCard.wav");
@@ -114,10 +139,38 @@ const boardMechanics = {
       
       //sjekker om spiller greid alle kortene. Lagt på timer slik at siste kort rekker snu seg.
       setTimeout(function () {
+        
       boardMechanics.theMatchedTiles.push(divFlipCardInner); 
         if (boardMechanics.theMatchedTiles.length == boardMechanics.amountToBeMatched){
           //alert("WINNER!");
-          setTimeout(function () {    
+          
+          //check if time is better than last, update if better
+          let gameCaptureMin = document.getElementById("minutes").innerHTML;
+          let gameCaptureSec = document.getElementById("seconds").innerHTML;
+          let collectMinute = localStorage.getItem("getMin") >= gameCaptureMin;
+          let collectSeconds = localStorage.getItem("getSec") > gameCaptureSec;
+          console.log( localStorage.getItem("getSec"), gameCaptureSec)
+          console.log(collectMinute, collectSeconds)
+          //FIKS DENNE TIL OPPDATERE DERSOM BEST TID
+          let isItTheBestTime = (collectMinute) && (collectSeconds);
+          console.log(isItTheBestTime);
+          if (document.getElementById("besSec").innerHTML=== ""){
+            console.log("First time!");
+            localStorage.setItem("getMin", gameCaptureMin);
+            localStorage.setItem("getSec", gameCaptureSec);
+            document.getElementById("bestMin").innerHTML=localStorage.getItem("getMin");
+            document.getElementById("besSec").innerHTML=localStorage.getItem("getSec");
+          }
+          else if (isItTheBestTime){
+          console.log("the best time ever!");
+          localStorage.clear();
+          localStorage.setItem("getMin", gameCaptureMin);
+          localStorage.setItem("getSec", gameCaptureSec);
+          document.getElementById("bestMin").innerHTML=localStorage.getItem("getMin");
+          document.getElementById("besSec").innerHTML=localStorage.getItem("getSec");
+         }
+          boardMechanics.clock(true);
+          setTimeout(function () {
             boardMechanics.comepleGameSound.play();
           }, 120);
         }
@@ -143,8 +196,16 @@ const boardMechanics = {
     boardMechanics.theSelectedCards = [];
     boardMechanics.tempCheckCard = [];
     boardMechanics.keepTheDivs = [];
-  }, 1550);
+  }, 1000);
 },
 };
 
+let theClockDiv = document.getElementById('clock');
+let theBestTimeDiv = document.getElementById('yourBestTime');
+let theBoard = document.getElementById('theBoard');
+let gameInfoDiv = document.getElementById('gameInfo');
+
 boardMechanics.createTheBoard();
+function startTheGame() {
+  gameInfoDiv.style.display="none";
+}
